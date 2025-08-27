@@ -1,2 +1,3 @@
 openai-whisper
 numpy<2
+whisperx

@@ -7,16 +7,30 @@ import json
 import time
 import pandas as pd
 from pathlib import Path
+from dotenv import load_dotenv
+import os
 
+
+os.system('clear')
+print(os.getcwd())
+load_dotenv(dotenv_path=f"{os.getcwd()}/.env")
+# api_key = os.getenv("OPENAI_API_KEY")
+# print("api key",api_key)
+# exit(0)
 transcript_file = '../data/IMG_0381.tsv'
 
-OPENAI_API_KEY = "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"
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+
+# client = AzureOpenAI(
+#     api_key=os.getenv("AZURE_OPENAI_API_KEY"),  
+#     api_version="2025-01-01-preview",
+#     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+# )
+
 client = OpenAI()
 
 DEFAULT_MODEL = "gpt-4o"
 
-os.system('clear')
+
 
 json_format = {          
           "detected_anomalies":[{"timestamp":"1450", "description":"description of defect"},
@@ -93,6 +107,36 @@ def openai_check(model,text):
 
     print("\n\n")
 
+def generate_variations(description: str, n: int = 20) -> list:
+    """
+    Generate variations of an anomaly description using GPT-4o.
+    
+    Args:
+        description (str): The anomaly description to vary.
+        n (int): Number of variations to generate.
+
+    Returns:
+        list: A list of generated description variations.
+    """
+    prompt = (
+        f"Generate {n} variations of the following anomaly description. "
+        f"Use words a british technician might use. Some are more verbose than others. Also consider English might not be their first language. They might not reference the component by full name, e.g. FASG Mesh might be referenced as just mesh. Mesh might be referenced as grill or grid, etc. Do not replace words if you are not sure whether they represent the same object. Do not include quotes or markdown.:\n\n"
+        f"'{description}'"
+    )
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,  # higher temp = more creative variations
+    )
+
+    # Extract text from the response
+    variations = response.choices[0].message.content.strip().split("\n")
+
+    # Clean up (remove numbering/bullets if present)
+    cleaned = [v.lstrip("0123456789. -") for v in variations if v.strip()]
+
+    return cleaned[:n]
 
 def find_index_for_timestamp(df, timestamp):
     """
@@ -140,7 +184,6 @@ def find_files_starting_with(number, folder, digits=4, extension=".jpg"):
     ])
     return matching_files
 
-
 folder_name = extract_stem(transcript_file)
 print(f"Filename stem: {folder_name}")
 
@@ -163,10 +206,28 @@ defects = openai_check(DEFAULT_MODEL,transcript)
 print(defects)
 detected_anomalies = defects["detected_anomalies"]
 print(detected_anomalies)
+print("\n\n\n")
+count = 1
+print(f"Anomalies extracted from transcript {transcript_file} ")
 for anomaly in detected_anomalies:
     timestamp = anomaly["timestamp"]
     description = anomaly["description"]
     index = find_index_for_timestamp(df, int(timestamp))
-    print(index)
+    # print(index)
     filenames = find_files_starting_with(index, f'../data/{folder_name}')
-    print(filenames)
+    # print(filenames)    
+
+    variations = generate_variations(description)
+    print(f"Anomaly {count}")
+    print("====================")
+    print(f"Description: {description}")
+    print(f"Variations:")
+    for variation in variations:
+        print(variation)
+    print(f"Line: {index}")
+    print(f"Timestamp: {timestamp}")
+    print(f"Images: ")
+    for filename in filenames:
+        print(filename)
+    print("\n\n")
+    count +=1
