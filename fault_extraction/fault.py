@@ -17,7 +17,7 @@ load_dotenv(dotenv_path=f"{os.getcwd()}/.env")
 # api_key = os.getenv("OPENAI_API_KEY")
 # print("api key",api_key)
 # exit(0)
-transcript_file = '../data/IMG_0381.tsv'
+transcript_file = '../data/IMG_0382.tsv'
 
 
 # client = AzureOpenAI(

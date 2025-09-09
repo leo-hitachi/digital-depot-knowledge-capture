@@ -1,6 +1,6 @@
 clear
 time whisper "../data/IMG_0381.mp4" \
-  --model turbo \
+  --model tiny \
   --fp16 False \
   --language English \
   --condition_on_previous_text False \

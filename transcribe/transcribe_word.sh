@@ -1,9 +1,11 @@
 clear
-time uvx whisperx "../data/IMG_0381.mp4" \
-  --model turbo \
-  --align_model WAV2VEC2_ASR_LARGE_LV60K_960H \
-  --compute_type int8 \
-  --print_progress True \
-  --segment_resolution chunk \
-  --max_line_width 50 \
-  --language en
+time whisper "../data/IMG_0381.mp4" \
+  --model large-v3 \
+  --fp16 False \
+  --language English \
+  --condition_on_previous_text False \
+  --temperature 0 \
+  --no_speech_threshold 0.6 \
+  --logprob_threshold -1.0 \
+  --word_timestamps True \
+  --output_format all
